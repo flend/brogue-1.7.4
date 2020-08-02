@@ -1,20 +1,14 @@
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./bin/espeak-libs
 
-SDL_FLAGS = `sdl-config --cflags` `sdl-config --libs`
+SDL_FLAGS = `sdl-config --cflags` `sdl-config --libs` -lSDL_mixer
 LIBTCODDIR=src/libtcod-1.5.2
-CFLAGS=-Isrc/brogue -Isrc/platform -Wall -Wno-parentheses ${DEFINES}
+CFLAGS=-Isrc/brogue -Isrc/platform -Wno-parentheses ${DEFINES}
 RELEASENAME=brogue-1.7.4
 LASTTARGET := $(shell ./brogue --target)
 CC ?= gcc
 
-ifeq (${LASTTARGET},both)
-all : both
-else ifeq (${LASTTARGET},curses)
-all : curses
-else ifeq (${LASTTARGET},tcod)
 all : tcod
-else
-all : both
-endif
+
 
 %.o : %.c Makefile src/brogue/Rogue.h src/brogue/IncludeGlobals.h
 	$(CC) $(CFLAGS) -g -o $@ -c $< 
@@ -37,46 +31,22 @@ BROGUEFILES=src/brogue/Architect.o \
 	src/brogue/Time.o \
 	src/platform/main.o \
 	src/platform/platformdependent.o \
-	src/platform/curses-platform.o \
 	src/platform/tcod-platform.o \
-	src/platform/term.o
 
 TCOD_DEF = -DBROGUE_TCOD -I$(LIBTCODDIR)/include
 TCOD_DEP = ${LIBTCODDIR}
-TCOD_LIB = -L. -L${LIBTCODDIR} ${SDL_FLAGS} -ltcod -Wl,-rpath,.
-
-CURSES_DEF = -DBROGUE_CURSES
-CURSES_LIB = -lncurses -lm
+TCOD_LIB = -L. -L${LIBTCODDIR} ${SDL_FLAGS} -lm -ltcod -lespeak -L./bin/espeak-libs -Wl,-rpath,.
 
 
 tcod : DEPENDENCIES += ${TCOD_DEP}
 tcod : DEFINES += ${TCOD_DEF}
 tcod : LIBRARIES += ${TCOD_LIB}
 
-curses : DEFINES = ${CURSES_DEF}
-curses : LIBRARIES = ${CURSES_LIB}
 
-both : DEPENDENCIES += ${TCOD_DEP}
-both : DEFINES += ${TCOD_DEF} ${CURSES_DEF}
-both : LIBRARIES += ${TCOD_LIB} ${CURSES_LIB}
-
-ifeq (${LASTTARGET},both)
-both : bin/brogue
-tcod : clean bin/brogue
-curses : clean bin/brogue
-else ifeq (${LASTTARGET},curses)
-curses : bin/brogue
-tcod : clean bin/brogue
-both : clean bin/brogue
-else ifeq (${LASTTARGET},tcod)
 tcod : bin/brogue
 curses : clean bin/brogue
 both : clean bin/brogue
-else
-both : bin/brogue
-curses : bin/brogue
-tcod : bin/brogue
-endif
+
 
 .PHONY : clean both curses tcod tar
 

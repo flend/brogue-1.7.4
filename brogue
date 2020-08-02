@@ -1,11 +1,8 @@
-#!/usr/bin/env bash
-cd `dirname $0`/bin
+#!/bin/bash
 
-./brogue $*
+cd ./bin
 
-# if [ -t 0 ]; then
-#	 ./brogue -t $*
-#else
-#	./brogue $*
-#fi
+export LD_PRELOAD=./espeak-libs/libespeak.so.1:./espeak-libs/libportaudio.so.2
+
+./brogue-SPEAK
 
